@@ -5,13 +5,10 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dto.UpdateUserDto;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.exception.DuplicateEmailException;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,7 +18,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto addNewUser(UserDto userDto) {
-        checkDuplicates(null, userDto);
         User user = userRepository.save(UserMapper.mapToUser(userDto));
         return UserMapper.mapToUserDto(user);
     }
@@ -35,7 +31,6 @@ public class UserServiceImpl implements UserService {
         if (updateUserDto.getEmail() != null) {
             userDto.setEmail(updateUserDto.getEmail());
         }
-        checkDuplicates(userId, userDto);
         User user = userRepository.update(UserMapper.mapToUser(userDto));
         return UserMapper.mapToUserDto(user);
     }
@@ -53,12 +48,5 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteById(Long id) {
         userRepository.deleteById(id);
-    }
-
-    private void checkDuplicates(Long userId, UserDto userDto) {
-        Optional<User> user = userRepository.getByEmail(userDto.getEmail());
-        if (user.isPresent() && !Objects.equals(user.get().getId(), userId)) {
-            throw new DuplicateEmailException("Уже существует пользователь с email: " + userDto.getEmail());
-        }
     }
 }

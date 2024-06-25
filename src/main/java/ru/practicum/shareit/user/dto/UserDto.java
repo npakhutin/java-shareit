@@ -9,6 +9,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class UserDto {
     private Long id;
+    @NotBlank(message = "Имя пользователя не может быть пустым")
     private String name;
     @Email(regexp = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$", message = "Неправильный формат email")
     @NotBlank(message = "Email не может быть пустым")

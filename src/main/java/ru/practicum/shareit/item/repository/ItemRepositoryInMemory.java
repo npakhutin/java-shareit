@@ -1,25 +1,28 @@
 package ru.practicum.shareit.item.repository;
 
 import org.springframework.stereotype.Repository;
+import ru.practicum.shareit.exception.UnknownItemException;
 import ru.practicum.shareit.item.Item;
-import ru.practicum.shareit.item.exception.UnknownItemException;
-import ru.practicum.shareit.user.exception.UnknownUserException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Repository
 public class ItemRepositoryInMemory implements ItemRepository {
     private final Map<Long, Item> items = new HashMap<>();
+    private final Map<Long, List<Item>> itemsByOwner = new HashMap<>();
     private Long idCounter = 0L;
 
     @Override
     public Item save(Item item) {
         item.setId(++idCounter);
+
         items.put(item.getId(), item);
+        List<Item> ownerItems = itemsByOwner.computeIfAbsent(item.getOwnerId(), v -> new ArrayList<>());
+        ownerItems.add(item);
+
         return item;
     }
 
@@ -36,7 +39,7 @@ public class ItemRepositoryInMemory implements ItemRepository {
     public Item update(Item updatedItem) {
         Item item = items.get(updatedItem.getId());
         if (item == null) {
-            throw new UnknownUserException("Не найдена вещь id = " + updatedItem.getId());
+            throw new UnknownItemException("Не найдена вещь id = " + updatedItem.getId());
         }
 
         if (updatedItem.getName() != null) {
@@ -54,10 +57,7 @@ public class ItemRepositoryInMemory implements ItemRepository {
 
     @Override
     public List<Item> getByOwnerId(Long ownerId) {
-        return items.values()
-                        .stream()
-                        .filter(i -> Objects.equals(ownerId, i.getOwnerId()))
-                        .collect(Collectors.toList());
+        return itemsByOwner.getOrDefault(ownerId, new ArrayList<>());
     }
 
     @Override

@@ -5,12 +5,13 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.UpdateItemDto;
-import ru.practicum.shareit.item.exception.IncorrectOwnerException;
+import ru.practicum.shareit.exception.IncorrectOwnerException;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -57,6 +58,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> getAll(Long userId) {
+
         return itemRepository.getByOwnerId(userId)
                 .stream()
                 .map(ItemMapper::mapToItemDto)
@@ -65,10 +67,12 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> search(Long userId, String text) {
+        if (text.isEmpty()) {
+            return new ArrayList<>();
+        }
         return itemRepository.getAll()
                 .stream()
-                .filter(item -> !text.isEmpty() &&
-                        item.getAvailable() &&
+                .filter(item -> item.getAvailable() &&
                         (item.getName().toLowerCase().contains(text.toLowerCase()) ||
                                 item.getDescription().toLowerCase().contains(text.toLowerCase())))
                 .map(ItemMapper::mapToItemDto)
