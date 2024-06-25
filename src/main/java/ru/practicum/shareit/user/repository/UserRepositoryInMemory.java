@@ -8,6 +8,7 @@ import ru.practicum.shareit.exception.UnknownUserException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Repository
 public class UserRepositoryInMemory implements UserRepository {
@@ -36,7 +37,7 @@ public class UserRepositoryInMemory implements UserRepository {
     }
 
     private void checkDuplicates(User user) {
-        if (!user.getId().equals(usersByEmail.getOrDefault(user.getEmail(), user).getId())) {
+        if (!Objects.equals(user.getId(), usersByEmail.getOrDefault(user.getEmail(), user).getId())) {
             throw new DuplicateEmailException("Уже существует пользователь с email: " + user.getEmail());
         }
     }
