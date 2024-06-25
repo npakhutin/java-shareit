@@ -36,7 +36,7 @@ public class UserRepositoryInMemory implements UserRepository {
     }
 
     private void checkDuplicates(User user) {
-        if (user.getId() != usersByEmail.getOrDefault(user.getEmail(), user).getId()) {
+        if (!user.getId().equals(usersByEmail.getOrDefault(user.getEmail(), user).getId())) {
             throw new DuplicateEmailException("Уже существует пользователь с email: " + user.getEmail());
         }
     }
