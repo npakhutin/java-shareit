@@ -2,19 +2,20 @@ package ru.practicum.shareit.user.repository;
 
 import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.exception.DuplicateEmailException;
-import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.exception.UnknownUserException;
+import ru.practicum.shareit.user.User;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Set;
 
 @Repository
 public class UserRepositoryInMemory implements UserRepository {
     private Long idCounter = 0L;
     private final Map<Long, User> users = new HashMap<>();
-    private final Map<String, User> usersByEmail = new HashMap<>();
+    private final Set<String> existingEmails = new HashSet<>();
 
     @Override
     public User getById(Long id) {
@@ -31,13 +32,13 @@ public class UserRepositoryInMemory implements UserRepository {
 
         user.setId(++idCounter);
         users.put(user.getId(), user);
-        usersByEmail.put(user.getEmail(), user);
+        existingEmails.add(user.getEmail());
 
         return user;
     }
 
     private void checkDuplicates(User user) {
-        if (!Objects.equals(user.getId(), usersByEmail.getOrDefault(user.getEmail(), user).getId())) {
+        if (existingEmails.contains(user.getEmail())) {
             throw new DuplicateEmailException("Уже существует пользователь с email: " + user.getEmail());
         }
     }
@@ -55,9 +56,9 @@ public class UserRepositoryInMemory implements UserRepository {
             user.setName(updatedUser.getName());
         }
         if (updatedUser.getEmail() != null) {
-            usersByEmail.remove(user.getEmail());
+            existingEmails.remove(user.getEmail());
             user.setEmail(updatedUser.getEmail());
-            usersByEmail.put(user.getEmail(), user);
+            existingEmails.add(user.getEmail());
         }
         return user;
     }
@@ -70,6 +71,6 @@ public class UserRepositoryInMemory implements UserRepository {
     @Override
     public void deleteById(Long id) {
         User user = users.remove(id);
-        usersByEmail.remove(user.getEmail());
+        existingEmails.remove(user.getEmail());
     }
 }
