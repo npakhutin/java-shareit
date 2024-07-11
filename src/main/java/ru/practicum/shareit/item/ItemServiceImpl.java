@@ -8,11 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
-import ru.practicum.shareit.booking.Booking;
-import ru.practicum.shareit.exception.IncorrectBookingException;
-import ru.practicum.shareit.exception.IncorrectOwnerException;
-import ru.practicum.shareit.exception.UnknownItemException;
-import ru.practicum.shareit.exception.UnknownUserException;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingStatus;
+import ru.practicum.shareit.exception.BadRequestException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.AddCommentDto;
 import ru.practicum.shareit.item.dto.AddItemDto;
 import ru.practicum.shareit.item.dto.CommentDto;
@@ -23,7 +22,8 @@ import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.model.ItemWithRelatedDataRow;
+import ru.practicum.shareit.item.repository.CommentRepository;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
@@ -45,10 +45,8 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public ItemDto addNewItem(Long ownerId, AddItemDto itemDto) {
-        User
-                user =
-                userRepository.findById(ownerId)
-                        .orElseThrow(() -> new UnknownUserException("Не найден пользователь id = " + ownerId));
+        User user = userRepository.findById(ownerId)
+                .orElseThrow(() -> new NotFoundException("Не найден пользователь id = " + ownerId));
         Item item = ItemMapper.mapToItem(user, itemDto);
         return ItemMapper.mapToItemDto(itemRepository.save(item));
     }
@@ -56,13 +54,11 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public ItemDto updateItemById(Long ownerId, Long itemId, UpdateItemDto updateItemDto) {
-        Item
-                item =
-                itemRepository.findById(itemId)
-                        .orElseThrow(() -> new UnknownItemException("Не найдена вещь id = " + itemId));
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Не найдена вещь id = " + itemId));
 
         if (!Objects.equals(item.getOwner().getId(), ownerId)) {
-            throw new IncorrectOwnerException("Указан неправильный владелец вещи");
+            throw new NotFoundException("Указан неправильный владелец вещи");
         }
 
         if (updateItemDto.getName() != null) {
@@ -81,9 +77,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemWithRelatedDataDto findById(Long userId, Long id) {
-        Item
-                item =
-                itemRepository.findById(id).orElseThrow(() -> new UnknownItemException("Не найдена вещь id = " + id));
+        Item item = itemRepository.findById(id).orElseThrow(() -> new NotFoundException("Не найдена вещь id = " + id));
 
         Booking lastBooking = null;
         Booking nextBooking = null;
@@ -99,24 +93,26 @@ public class ItemServiceImpl implements ItemService {
             }
         }
 
-        List<CommentDto> comments = itemRepository.findCommentDtosForItem(item);
+        List<CommentDto> comments = CommentMapper.mapToCommentDto(commentRepository.findByItemOrderByCreatedDesc(item));
 
         return ItemMapper.mapToItemWithRelatedDataDto(item,
                                                       Optional.ofNullable(lastBooking)
-                                                           .map(BookingMapper::mapToBookingBasicInfoDto)
-                                                           .orElse(null),
+                                                              .map(BookingMapper::mapToBookingBasicInfoDto)
+                                                              .orElse(null),
                                                       Optional.ofNullable(nextBooking)
-                                                           .map(BookingMapper::mapToBookingBasicInfoDto)
-                                                           .orElse(null),
+                                                              .map(BookingMapper::mapToBookingBasicInfoDto)
+                                                              .orElse(null),
                                                       comments);
     }
 
     @Override
     public List<ItemWithRelatedDataDto> findAllWithRelatedDataByOwner(Long ownerId) {
+        List<Item> items = itemRepository.findByOwnerId(ownerId, Sort.by("id"));
+        List<Booking> lastBookings = bookingRepository.findNearestPrevBookingsByItemOwner(ownerId, LocalDateTime.now());
+        List<Booking> nextBookings = bookingRepository.findNearestNextBookingsByItemOwner(ownerId, LocalDateTime.now());
+        List<Comment> comments = commentRepository.findForItemsOfOwner(ownerId);
 
-        List<ItemWithRelatedDataRow> itemsData = itemRepository.findAllWithRelatedDataByOwner(ownerId);
-
-        return ItemMapper.mapToItemWithRelatedDataDto(itemsData);
+        return ItemMapper.mapToItemWithRelatedDataDto(items, lastBookings, nextBookings, comments);
     }
 
     @Override
@@ -130,13 +126,20 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public CommentDto addNewComment(Long userId, Long itemId, AddCommentDto commentDto) {
-        List<Booking> bookings = bookingRepository.findComletedByBookerAndItem(userId, itemId);
+        List<Booking> bookings = bookingRepository.findByBookerIdAndItemIdAndStatusAndEndBefore(userId,
+                                                                                                itemId,
+                                                                                                BookingStatus.APPROVED,
+                                                                                                LocalDateTime.now());
         if (bookings.isEmpty()) {
-            throw new IncorrectBookingException("Комментарий может оставить только пользователь, ранее бронировавший вещь");
+            throw new BadRequestException("Комментарий может оставить только пользователь, ранее бронировавший вещь");
         }
         User author = bookings.getFirst().getBooker();
         Item item = bookings.getFirst().getItem();
-        Comment comment = commentRepository.save(new Comment(null, commentDto.getText(), item, author, LocalDateTime.now()));
+        Comment comment = commentRepository.save(new Comment(null,
+                                                             commentDto.getText(),
+                                                             item,
+                                                             author,
+                                                             LocalDateTime.now()));
         return CommentMapper.mapToCommentDto(comment);
     }
 }

@@ -1,4 +1,4 @@
-package ru.practicum.shareit.booking;
+package ru.practicum.shareit.booking.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -48,23 +48,4 @@ public class Booking {
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Booking)) return false;
-        return id != null && id.equals(((Booking) o).getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
-
-    public enum BookingStatus {
-        WAITING, APPROVED, REJECTED
-    }
-
-    public enum BookingStateForSearching {
-        ALL, WAITING, APPROVED, REJECTED, CURRENT, FUTURE, PAST
-    }
 }

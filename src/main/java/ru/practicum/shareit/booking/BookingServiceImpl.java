@@ -5,15 +5,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.AddBookingDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
-import ru.practicum.shareit.booking.Booking.BookingStateForSearching;
-import ru.practicum.shareit.booking.Booking.BookingStatus;
-import ru.practicum.shareit.exception.IncorrectBookingException;
-import ru.practicum.shareit.exception.IncorrectOwnerException;
-import ru.practicum.shareit.exception.UnknownBookingException;
-import ru.practicum.shareit.exception.UnknownItemException;
-import ru.practicum.shareit.exception.UnknownUserException;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingStateForSearching;
+import ru.practicum.shareit.booking.model.BookingStatus;
+import ru.practicum.shareit.exception.BadRequestException;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
@@ -31,27 +29,20 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingDto addNewBooking(Long bookerId, AddBookingDto newBookingDto) {
-        Item
-                item =
-                itemRepository.findById(newBookingDto.getItemId())
-                        .orElseThrow(() -> new UnknownItemException("Не найдена вещь id = " +
-                                                                            newBookingDto.getItemId()));
-        if (Objects.equals(item.getOwner().getId(), bookerId)) {
-            throw new UnknownItemException("Не найдена вещь с id = " +
-                                                   newBookingDto.getItemId() +
-                                                   ", которую мог бы забронировать пользователь с id = " +
-                                                   bookerId);
-        }
-        if (!item.getAvailable()) {
-            throw new IncorrectBookingException("Вещь с id = " + item.getId() + " недоступна");
-        }
+        Item item = itemRepository.findByIdAndOwnerIdNot(newBookingDto.getItemId(), bookerId)
+                .orElseThrow(() -> new NotFoundException("Не найдена вещь с id = " +
+                                                                 newBookingDto.getItemId() +
+                                                                 ", которую мог бы забронировать пользователь с id = " +
+                                                                 bookerId));
 
-        User
-                booker =
-                userRepository.findById(bookerId)
-                        .orElseThrow(() -> new UnknownUserException("Не найден пользователь id = " + bookerId));
+        User booker = userRepository.findById(bookerId)
+                .orElseThrow(() -> new NotFoundException("Не найден пользователь id = " + bookerId));
 
         Booking booking = BookingMapper.mapToBooking(booker, item, newBookingDto);
+        List<Booking> existingBookings = bookingRepository.findByItemIdAndActiveInPeriod(item.getId(), booking.getStart(), booking.getEnd());
+        if (!item.getAvailable() || !existingBookings.isEmpty()) {
+            throw new BadRequestException("Вещь с id = " + item.getId() + " недоступна");
+        }
 
         return BookingMapper.mapToBookingDto(bookingRepository.save(booking));
     }
@@ -59,18 +50,16 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingDto updateStatus(Long userId, Long bookingId, Boolean approved) {
-        Booking
-                booking =
-                bookingRepository.findById(bookingId)
-                        .orElseThrow(() -> new UnknownBookingException("Не найдено бронирование с id = " + bookingId));
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException("Не найдено бронирование с id = " + bookingId));
 
         BookingStatus newStatus = approved ? BookingStatus.APPROVED : BookingStatus.REJECTED;
         if (booking.getStatus() == newStatus) {
-            throw new IncorrectBookingException("Передан неправильный новый статус бронирования");
+            throw new BadRequestException("Передан неправильный новый статус бронирования");
         }
         Item item = booking.getItem();
         if (!Objects.equals(item.getOwner().getId(), userId)) {
-            throw new IncorrectOwnerException("Указан неправильный владелец вещи");
+            throw new NotFoundException("Указан неправильный владелец вещи");
         }
 
         booking.setStatus(newStatus);
@@ -80,13 +69,11 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingDto findById(Long userId, Long bookingId) {
-        Booking
-                booking =
-                bookingRepository.findById(bookingId)
-                        .orElseThrow(() -> new UnknownBookingException("Не найдено бронирование с id = " + bookingId));
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException("Не найдено бронирование с id = " + bookingId));
         if (!Objects.equals(booking.getBooker().getId(), userId) &&
-            !Objects.equals(booking.getItem().getOwner().getId(), userId)) {
-            throw new UnknownBookingException("Просматривать бронирование может только инициатор или владелец вещи");
+                !Objects.equals(booking.getItem().getOwner().getId(), userId)) {
+            throw new NotFoundException("Просматривать бронирование может только инициатор или владелец вещи");
         }
         return BookingMapper.mapToBookingDto(booking);
     }
@@ -102,7 +89,7 @@ public class BookingServiceImpl implements BookingService {
         try {
             state = BookingStateForSearching.valueOf(stateString.toUpperCase());
         } catch (Exception e) {
-            throw new IncorrectBookingException("Unknown state: " + stateString);
+            throw new BadRequestException("Unknown state: " + stateString);
         }
         return state;
     }
@@ -110,11 +97,10 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingDto> getBookingsByItemsOwner(Long ownerId, String stateString) {
         BookingStateForSearching state = getBookingStateForSearching(stateString);
-        List<BookingDto>
-                result =
-                BookingMapper.mapToBookingDto(bookingRepository.findByOwnerIdAndState(ownerId, state.name()));
+        List<BookingDto> result = BookingMapper.mapToBookingDto(bookingRepository.findByOwnerIdAndState(ownerId,
+                                                                                                        state.name()));
         if (result.isEmpty()) {
-            throw new UnknownBookingException("Не найдено бронирований вещей");
+            throw new NotFoundException("Не найдено бронирований вещей");
         }
         return result;
     }

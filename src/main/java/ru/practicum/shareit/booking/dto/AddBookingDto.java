@@ -9,9 +9,9 @@ import lombok.Data;
 @AllArgsConstructor
 public class AddBookingDto {
     @NotBlank(message = "Должно быть задано начало периода бронирования")
-    String start;
+    private String start;
     @NotBlank(message = "Должен быть задан конец периода бронирования")
-    String end;
+    private String end;
     @NotNull(message = "Необходимо указать id бронируемой вещи")
     private Long itemId;
 }

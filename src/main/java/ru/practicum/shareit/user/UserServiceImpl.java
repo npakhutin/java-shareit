@@ -3,7 +3,7 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.exception.UnknownUserException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UpdateUserDto;
 import ru.practicum.shareit.user.dto.UserDto;
 
@@ -29,7 +29,7 @@ public class UserServiceImpl implements UserService {
         UserDto
                 userDto =
                 UserMapper.mapToUserDto(userRepository.findById(userId)
-                                                .orElseThrow(() -> new UnknownUserException(
+                                                .orElseThrow(() -> new NotFoundException(
                                                         "Не найден пользователь id = " + userId)));
         if (updateUserDto.getName() != null) {
             userDto.setName(updateUserDto.getName());
@@ -49,7 +49,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto findById(Long id) {
         return UserMapper.mapToUserDto(userRepository.findById(id)
-                                               .orElseThrow(() -> new UnknownUserException(
+                                               .orElseThrow(() -> new NotFoundException(
                                                        "Не найден пользователь id = " + id)));
     }
 

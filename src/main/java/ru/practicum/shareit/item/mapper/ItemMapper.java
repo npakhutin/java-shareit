@@ -4,13 +4,13 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.dto.BookingBasicInfoDto;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.dto.AddItemDto;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemWithRelatedDataDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.model.ItemWithRelatedDataRow;
 import ru.practicum.shareit.user.User;
 
 import java.util.ArrayList;
@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ItemMapper {
@@ -55,32 +56,30 @@ public class ItemMapper {
         return itemDtos;
     }
 
-    public static List<ItemWithRelatedDataDto> mapToItemWithRelatedDataDto(List<ItemWithRelatedDataRow> rows) {
-        Map<Item, ItemWithRelatedDataDto> mapDto = new HashMap<>();
-        for (ItemWithRelatedDataRow row : rows) {
-            ItemWithRelatedDataDto dto;
-            if (!mapDto.containsKey(row.getItem())) {
-                dto =
-                        mapToItemWithRelatedDataDto(row.getItem(),
-                                                    Optional.ofNullable(row.getLastBooking())
-                                                            .map(BookingMapper::mapToBookingBasicInfoDto)
-                                                            .orElse(null),
-                                                    Optional.ofNullable(row.getNextBooking())
-                                                            .map(BookingMapper::mapToBookingBasicInfoDto)
-                                                            .orElse(null),
-                                                    new ArrayList<>());
-                mapDto.put(row.getItem(), dto);
-            } else {
-                dto = mapDto.get(row.getItem());
-            }
-            if (row.getComment() != null) {
-                dto.getComments().add(mapToCommentDto(row.getComment()));
-            }
-        }
-        return List.copyOf(mapDto.values());
-    }
+    public static List<ItemWithRelatedDataDto> mapToItemWithRelatedDataDto(List<Item> items,
+                                                                           List<Booking> lastBookings,
+                                                                           List<Booking> nextBookings,
+                                                                           List<Comment> comments) {
+        Map<Item, Booking> lastBookingsMap = lastBookings.stream()
+                .collect(Collectors.toMap(Booking::getItem, booking -> booking, (a, b) -> b));
+        Map<Item, Booking> nextBookingsMap = nextBookings.stream()
+                .collect(Collectors.toMap(Booking::getItem, booking -> booking, (a, b) -> b));
+        Map<Item, List<Comment>> commentsMap = new HashMap<>();
+        comments.forEach(comment -> commentsMap.getOrDefault(comment.getItem(), new ArrayList<>()).add(comment));
 
-    private static CommentDto mapToCommentDto(Comment comment) {
-        return new CommentDto(comment.getId(), comment.getText(), comment.getAuthor().getName(), comment.getCreated());
+        List<ItemWithRelatedDataDto> itemDtos = new ArrayList<>();
+        for (Item item : items) {
+            itemDtos.add(mapToItemWithRelatedDataDto(item,
+                                                     Optional.ofNullable(lastBookingsMap.get(item))
+                                                             .map(BookingMapper::mapToBookingBasicInfoDto)
+                                                             .orElse(null),
+                                                     Optional.ofNullable(nextBookingsMap.get(item))
+                                                             .map(BookingMapper::mapToBookingBasicInfoDto)
+                                                             .orElse(null),
+                                                     Optional.ofNullable(commentsMap.get(item))
+                                                             .map(CommentMapper::mapToCommentDto)
+                                                             .orElse(new ArrayList<>())));
+        }
+        return itemDtos;
     }
 }
