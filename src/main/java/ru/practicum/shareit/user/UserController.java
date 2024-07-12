@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.shareit.user.dto.UpdateUserDto;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
 
@@ -24,12 +23,12 @@ public class UserController {
 
     @GetMapping
     public List<UserDto> getAll() {
-        return userService.getAll();
+        return userService.findAll();
     }
 
     @GetMapping("/{id}")
-    public UserDto getById(@PathVariable Long id) {
-        return userService.getById(id);
+    public UserDto findById(@PathVariable Long id) {
+        return userService.findById(id);
     }
 
     @DeleteMapping("/{id}")
