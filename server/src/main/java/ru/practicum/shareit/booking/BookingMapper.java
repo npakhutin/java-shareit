@@ -10,7 +10,6 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dto.UserIdDto;
 
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,8 +22,8 @@ public class BookingMapper {
     public static BookingDto mapToBookingDto(Booking booking) {
         Item item = booking.getItem();
         return new BookingDto(booking.getId(),
-                              booking.getStart().format(DateTimeFormatter.ISO_DATE_TIME),
-                              booking.getEnd().format(DateTimeFormatter.ISO_DATE_TIME),
+                              booking.getStart(),
+                              booking.getEnd(),
                               booking.getStatus(),
                               new UserIdDto(booking.getBooker().getId()),
                               ItemMapper.mapToItemBasicInfoDto(item));

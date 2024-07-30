@@ -6,12 +6,14 @@ import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.item.dto.ItemBasicInfoDto;
 import ru.practicum.shareit.user.dto.UserIdDto;
 
+import java.time.LocalDateTime;
+
 @Data
 @AllArgsConstructor
 public class BookingDto {
     private Long id;
-    private String start;
-    private String end;
+    private LocalDateTime start;
+    private LocalDateTime end;
     private BookingStatus status;
     private UserIdDto booker;
     private ItemBasicInfoDto item;
