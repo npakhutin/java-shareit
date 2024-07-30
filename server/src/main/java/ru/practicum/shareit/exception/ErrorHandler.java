@@ -31,7 +31,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseStatus(HttpStatus.CONFLICT)
     public Map<String, String> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
         if (e.getCause() instanceof ConstraintViolationException violationException) {
             return Map.of("error", "Unique constraint violation " + violationException.getConstraintName());

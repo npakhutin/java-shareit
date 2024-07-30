@@ -61,7 +61,7 @@ public class BookingServiceImpl implements BookingService {
         }
         Item item = booking.getItem();
         if (!Objects.equals(item.getOwner().getId(), userId)) {
-            throw new NotFoundException("Указан неправильный владелец вещи");
+            throw new BadRequestException("Указан неправильный владелец вещи");
         }
 
         booking.setStatus(newStatus);
