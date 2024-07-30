@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class BookItemRequestDto {
+public class BookItemRqDto {
     @NotNull(message = "Необходимо указать id бронируемой вещи")
     private long itemId;
     @NotNull(message = "Необходимо задать начало периода бронирования")

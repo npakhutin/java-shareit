@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.user.dto.UpdateUserDto;
+import ru.practicum.shareit.user.dto.UpdateUserRqDto;
 import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.List;
@@ -25,12 +25,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDto updateUserById(Long userId, UpdateUserDto updateUserDto) {
-        UserDto
-                userDto =
-                UserMapper.mapToUserDto(userRepository.findById(userId)
-                                                .orElseThrow(() -> new NotFoundException(
-                                                        "Не найден пользователь id = " + userId)));
+    public UserDto updateUserById(Long userId, UpdateUserRqDto updateUserDto) {
+        UserDto userDto = UserMapper.mapToUserDto(userRepository.findById(userId)
+                                                          .orElseThrow(() -> new NotFoundException(
+                                                                  "Не найден пользователь id = " + userId)));
         if (updateUserDto.getName() != null) {
             userDto.setName(updateUserDto.getName());
         }
@@ -49,8 +47,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto findById(Long id) {
         return UserMapper.mapToUserDto(userRepository.findById(id)
-                                               .orElseThrow(() -> new NotFoundException(
-                                                       "Не найден пользователь id = " + id)));
+                                               .orElseThrow(() -> new NotFoundException("Не найден пользователь id = " +
+                                                                                                id)));
     }
 
     @Override

@@ -5,9 +5,9 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class UpdateItemDto {
-    //private Long id;
+public class AddItemRqDto {
     private String name;
     private String description;
     private Boolean available;
+    private Long requestId;
 }

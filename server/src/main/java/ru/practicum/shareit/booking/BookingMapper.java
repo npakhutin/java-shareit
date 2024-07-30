@@ -1,33 +1,23 @@
 package ru.practicum.shareit.booking;
 
-import ru.practicum.shareit.booking.dto.AddBookingDto;
+import ru.practicum.shareit.booking.dto.AddBookingRqDto;
 import ru.practicum.shareit.booking.dto.BookingBasicInfoDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
-import ru.practicum.shareit.exception.BadRequestException;
+import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.dto.ItemBasicInfoDto;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dto.UserIdDto;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class BookingMapper {
-    public static Booking mapToBooking(User booker, Item item, AddBookingDto newBookingDto) {
-        LocalDateTime startDate = LocalDateTime.parse(newBookingDto.getStart());
-        LocalDateTime endDate = LocalDateTime.parse(newBookingDto.getEnd());
-        if (!(startDate.isAfter(LocalDateTime.now()) &&
-                endDate.isAfter(LocalDateTime.now()) &&
-                startDate.isBefore(endDate))) {
-            throw new BadRequestException("Задан неправильный период бронирования");
-        }
-
-        return new Booking(null, startDate, endDate, BookingStatus.WAITING, booker, item);
+    public static Booking mapToBooking(User booker, Item item, AddBookingRqDto newBookingDto) {
+        return new Booking(null, newBookingDto.getStart(), newBookingDto.getEnd(), BookingStatus.WAITING, booker, item);
     }
 
     public static BookingDto mapToBookingDto(Booking booking) {
@@ -37,7 +27,7 @@ public class BookingMapper {
                               booking.getEnd().format(DateTimeFormatter.ISO_DATE_TIME),
                               booking.getStatus(),
                               new UserIdDto(booking.getBooker().getId()),
-                              new ItemBasicInfoDto(item.getId(), item.getName()));
+                              ItemMapper.mapToItemBasicInfoDto(item));
     }
 
     public static BookingBasicInfoDto mapToBookingBasicInfoDto(Booking booking) {

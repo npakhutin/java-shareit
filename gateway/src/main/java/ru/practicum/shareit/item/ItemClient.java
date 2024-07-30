@@ -8,9 +8,9 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.shareit.client.BaseClient;
-import ru.practicum.shareit.item.dto.AddCommentDto;
-import ru.practicum.shareit.item.dto.AddItemRequestDto;
-import ru.practicum.shareit.item.dto.UpdateItemRequestDto;
+import ru.practicum.shareit.item.dto.AddCommentRqDto;
+import ru.practicum.shareit.item.dto.AddItemRqDto;
+import ru.practicum.shareit.item.dto.UpdateItemRqDto;
 
 import java.util.Map;
 
@@ -25,7 +25,7 @@ public class ItemClient extends BaseClient {
                 .build());
     }
 
-    public ResponseEntity<Object> addNewItem(Long userId, AddItemRequestDto newItemDto) {
+    public ResponseEntity<Object> addNewItem(Long userId, AddItemRqDto newItemDto) {
         return post("", userId, newItemDto);
     }
 
@@ -42,11 +42,11 @@ public class ItemClient extends BaseClient {
         return get("/search?text={text}", userId, parameters);
     }
 
-    public ResponseEntity<Object> updateItem(Long userId, Long itemId, UpdateItemRequestDto itemDto) {
+    public ResponseEntity<Object> updateItem(Long userId, Long itemId, UpdateItemRqDto itemDto) {
         return patch("/" + itemId, userId, itemDto);
     }
 
-    public ResponseEntity<Object> addNewComment(Long userId, Long itemId, AddCommentDto commentDto) {
+    public ResponseEntity<Object> addNewComment(Long userId, Long itemId, AddCommentRqDto commentDto) {
         Map<String, Object> parameters = Map.of("itemId", itemId);
         return post("/{itemId}/comment", userId, parameters, commentDto);
     }

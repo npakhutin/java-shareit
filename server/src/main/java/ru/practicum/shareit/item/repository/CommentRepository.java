@@ -17,5 +17,5 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             where o.id = ?1
             order by c.item.id, c.created desc
             """)
-    List<Comment> findForItemsOfOwner(Long ownerId);
+    List<Comment> findCommentsForItemsOfOwner(Long ownerId);
 }

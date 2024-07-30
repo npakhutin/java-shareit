@@ -3,15 +3,15 @@ package ru.practicum.shareit.booking;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.booking.dto.AddBookingDto;
+import ru.practicum.shareit.booking.dto.AddBookingRqDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStateForSearching;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
@@ -28,7 +28,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public BookingDto addNewBooking(Long bookerId, AddBookingDto newBookingDto) {
+    public BookingDto addNewBooking(Long bookerId, AddBookingRqDto newBookingDto) {
         Item item = itemRepository.findByIdAndOwnerIdNot(newBookingDto.getItemId(), bookerId)
                 .orElseThrow(() -> new NotFoundException("Не найдена вещь с id = " +
                                                                  newBookingDto.getItemId() +
@@ -39,7 +39,9 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new NotFoundException("Не найден пользователь id = " + bookerId));
 
         Booking booking = BookingMapper.mapToBooking(booker, item, newBookingDto);
-        List<Booking> existingBookings = bookingRepository.findByItemIdAndActiveInPeriod(item.getId(), booking.getStart(), booking.getEnd());
+        List<Booking> existingBookings = bookingRepository.findByItemIdAndActiveInPeriod(item.getId(),
+                                                                                         booking.getStart(),
+                                                                                         booking.getEnd());
         if (!item.getAvailable() || !existingBookings.isEmpty()) {
             throw new BadRequestException("Вещь с id = " + item.getId() + " недоступна");
         }
