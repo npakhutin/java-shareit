@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -11,12 +10,12 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.shareit.item.dto.AddCommentDto;
-import ru.practicum.shareit.item.dto.AddItemDto;
+import ru.practicum.shareit.item.dto.AddCommentRqDto;
+import ru.practicum.shareit.item.dto.AddItemRqDto;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemWithRelatedDataDto;
-import ru.practicum.shareit.item.dto.UpdateItemDto;
+import ru.practicum.shareit.item.dto.UpdateItemRqDto;
 
 import java.util.List;
 
@@ -27,17 +26,17 @@ public class ItemController {
     private final ItemService itemService;
 
     @PostMapping
-    public ItemDto add(@RequestHeader("X-Sharer-User-Id") Long userId, @RequestBody @Valid AddItemDto itemDto) {
+    public ItemDto addNewItem(@RequestHeader("X-Sharer-User-Id") Long userId, @RequestBody AddItemRqDto itemDto) {
         return itemService.addNewItem(userId, itemDto);
     }
 
     @GetMapping("/{id}")
-    public ItemWithRelatedDataDto getById(@RequestHeader("X-Sharer-User-Id") Long userId, @PathVariable Long id) {
+    public ItemWithRelatedDataDto findById(@RequestHeader("X-Sharer-User-Id") Long userId, @PathVariable Long id) {
         return itemService.findById(userId, id);
     }
 
     @GetMapping
-    public List<ItemWithRelatedDataDto> getAll(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public List<ItemWithRelatedDataDto> findAll(@RequestHeader("X-Sharer-User-Id") Long userId) {
         return itemService.findAllWithRelatedDataByOwner(userId);
     }
 
@@ -48,16 +47,16 @@ public class ItemController {
     }
 
     @PatchMapping("/{id}")
-    public ItemDto update(@RequestHeader("X-Sharer-User-Id") Long userId,
-                          @PathVariable("id") Long itemId,
-                          @RequestBody @Valid UpdateItemDto itemDto) {
+    public ItemDto updateItemById(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                  @PathVariable("id") Long itemId,
+                                  @RequestBody UpdateItemRqDto itemDto) {
         return itemService.updateItemById(userId, itemId, itemDto);
     }
 
     @PostMapping("/{id}/comment")
-    public CommentDto addComment(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                 @PathVariable("id") Long itemId,
-                                 @RequestBody @Valid AddCommentDto commentDto) {
+    public CommentDto addNewComment(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                    @PathVariable("id") Long itemId,
+                                    @RequestBody AddCommentRqDto commentDto) {
         return itemService.addNewComment(userId, itemId, commentDto);
     }
 

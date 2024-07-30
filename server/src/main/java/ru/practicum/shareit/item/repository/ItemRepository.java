@@ -4,6 +4,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.ItemRequest;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,11 +18,23 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             select it
             from Item as it
             where it.available and (
-               lower(it.name) like concat('%', lower(?1), '%')
+               it.name ilike concat('%', ?1, '%')
                or
-               lower(it.description) like concat('%', lower(?1), '%')
+               it.description ilike concat('%', ?1, '%')
             )
             order by it.id
             """)
     List<Item> findAvailableItemsByNameAndDescriptionIgnoreCase(String searchText);
+
+    @Query("""
+            select it
+            from Item as it
+            join it.request.requester as rq
+            where rq.id = ?1
+            """)
+    List<Item> findByRequesterId(Long userId, Sort id);
+
+    List<Item> findByRequestId(Long requestId, Sort sort);
+
+    List<Item> findByRequestIn(List<ItemRequest> requests, Sort by);
 }

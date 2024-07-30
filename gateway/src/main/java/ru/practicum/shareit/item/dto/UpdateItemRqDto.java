@@ -6,7 +6,7 @@ import org.springframework.util.ObjectUtils;
 
 @Data
 @AllArgsConstructor
-public class UpdateItemRequestDto {
+public class UpdateItemRqDto {
     private String name;
     private String description;
     private Boolean available;

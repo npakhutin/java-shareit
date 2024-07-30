@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AddCommentDto {
+public class AddCommentRqDto {
     @NotBlank(message = "Текст комментария не может быть пустым")
     private String text;
 }

@@ -16,8 +16,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import ru.practicum.shareit.booking.dto.BookItemRequestDto;
+import ru.practicum.shareit.booking.dto.BookItemRqDto;
 import ru.practicum.shareit.booking.dto.BookingState;
+
+import java.time.LocalDateTime;
 
 
 @Controller
@@ -30,13 +32,11 @@ public class BookingController {
 
     @GetMapping("/owner")
     public ResponseEntity<Object> getBookingsByItemsOwner(@RequestHeader("X-Sharer-User-Id") Long ownerId,
-                                                          @RequestParam(name = "state", defaultValue = "all") String stateParam,
-                                                          @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
-                                                          @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
+                                                          @RequestParam(name = "state", defaultValue = "all") String stateParam) {
         BookingState state = BookingState.from(stateParam)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + stateParam));
-        log.info("Get bookings by item's owner with state {}, userId={}, from={}, size={}", stateParam, ownerId, from, size);
-        return bookingClient.getBookingsByItemsOwner(ownerId, state, from, size);
+        log.info("Get bookings by item's owner with state {}, userId={}", stateParam, ownerId);
+        return bookingClient.getBookingsByItemsOwner(ownerId, state);
     }
 
     @GetMapping
@@ -52,8 +52,13 @@ public class BookingController {
 
     @PostMapping
     public ResponseEntity<Object> bookItem(@RequestHeader("X-Sharer-User-Id") long userId,
-                                           @RequestBody @Valid BookItemRequestDto requestDto) {
+                                           @RequestBody @Valid BookItemRqDto requestDto) {
         log.info("Creating booking {}, userId={}", requestDto, userId);
+        if (!(requestDto.getStart().isAfter(LocalDateTime.now()) &&
+                requestDto.getEnd().isAfter(LocalDateTime.now()) &&
+                requestDto.getStart().isBefore(requestDto.getEnd()))) {
+            throw new IllegalArgumentException("Задан неправильный период бронирования");
+        }
         return bookingClient.bookItem(userId, requestDto);
     }
 
