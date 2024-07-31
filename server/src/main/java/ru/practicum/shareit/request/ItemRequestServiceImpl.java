@@ -36,7 +36,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     public List<ItemRequestDto> findAllUserItemRequests(Long userId) {
         List<ItemRequest> requests = requestRepository.findByRequesterId(userId, Sort.by(ItemRequest.Fields.created).descending());
-        List<Item> items = itemRepository.findByRequesterId(userId, Sort.by(Item.Fields.id));
+        List<Item> items = itemRepository.findByRequestRequesterId(userId, Sort.by(Item.Fields.id));
 
         return ItemRequestMapper.mapToItemRequestDto(requests, items);
     }

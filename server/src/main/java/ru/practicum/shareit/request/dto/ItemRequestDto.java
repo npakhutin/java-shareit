@@ -10,9 +10,9 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class ItemRequestDto {
-    Long id;
+    private Long id;
     private String description;
     private String requesterName;
     private LocalDateTime created;
-    List<ItemBasicInfoDto> items;
+    private List<ItemBasicInfoDto> items;
 }

@@ -145,7 +145,7 @@ public class ItemServiceImpl implements ItemService {
     public CommentDto addNewComment(Long userId, Long itemId, AddCommentRqDto commentDto) {
         List<Booking> bookings = bookingRepository.findByBookerIdAndItemIdAndStatusAndEndBefore(userId,
                                                                                                 itemId,
-                                                                                                BookingStatus.APPROVED,
+                                                                                                 BookingStatus.APPROVED,
                                                                                                 LocalDateTime.now());
         if (bookings.isEmpty()) {
             throw new BadRequestException("Комментарий может оставить только пользователь, ранее бронировавший вещь");

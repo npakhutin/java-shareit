@@ -83,7 +83,7 @@ public class ItemRequestControllerTest {
 
     @Test
     void findAll() throws Exception {
-        when(itemRepository.findByRequesterId(any(), any())).thenReturn(List.of(item));
+        when(itemRepository.findByRequestRequesterId(any(), any())).thenReturn(List.of(item));
         when(requestRepository.findByRequesterId(any(), any())).thenReturn(List.of(request));
 
         mvc.perform(get("/requests").characterEncoding(StandardCharsets.UTF_8)

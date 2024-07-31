@@ -1,7 +1,6 @@
 package ru.practicum.shareit.exception;
 
 import org.hibernate.exception.ConstraintViolationException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -32,12 +31,8 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
-    public Map<String, String> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
-        if (e.getCause() instanceof ConstraintViolationException violationException) {
-            return Map.of("error", "Unique constraint violation " + violationException.getConstraintName());
-        } else {
-            return Map.of("error", "Internal Server Error " + e.getMessage());
-        }
+    public Map<String, String> handleDataIntegrityViolationException(ConstraintViolationException e) {
+        return Map.of("error", "Unique constraint violation " + e.getConstraintName());
     }
 }
 

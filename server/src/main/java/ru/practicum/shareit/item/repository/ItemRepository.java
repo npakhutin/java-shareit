@@ -26,13 +26,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             """)
     List<Item> findAvailableItemsByNameAndDescriptionIgnoreCase(String searchText);
 
-    @Query("""
-            select it
-            from Item as it
-            join it.request.requester as rq
-            where rq.id = ?1
-            """)
-    List<Item> findByRequesterId(Long userId, Sort id);
+    List<Item> findByRequestRequesterId(Long userId, Sort id);
 
     List<Item> findByRequestId(Long requestId, Sort sort);
 

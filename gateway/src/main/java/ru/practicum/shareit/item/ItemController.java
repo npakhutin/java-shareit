@@ -44,9 +44,6 @@ public class ItemController {
     public ResponseEntity<Object> updateItem(@RequestHeader("X-Sharer-User-Id") Long userId,
                                              @PathVariable("id") Long itemId,
                                              @RequestBody @Valid UpdateItemRqDto itemDto) {
-        if (itemDto.allFieldsAreEmpty()) {
-            throw new IllegalArgumentException("Должно быть задано хотя бы одно изменяемое поле");
-        }
         return itemClient.updateItem(userId, itemId, itemDto);
     }
 
