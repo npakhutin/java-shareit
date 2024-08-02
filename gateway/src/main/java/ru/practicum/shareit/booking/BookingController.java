@@ -19,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import ru.practicum.shareit.booking.dto.BookItemRqDto;
 import ru.practicum.shareit.booking.dto.BookingState;
 
-import java.time.LocalDateTime;
-
 
 @Controller
 @RequestMapping(path = "/bookings")
@@ -54,9 +52,7 @@ public class BookingController {
     public ResponseEntity<Object> bookItem(@RequestHeader("X-Sharer-User-Id") long userId,
                                            @RequestBody @Valid BookItemRqDto requestDto) {
         log.info("Creating booking {}, userId={}", requestDto, userId);
-        if (!(requestDto.getStart().isAfter(LocalDateTime.now()) &&
-                requestDto.getEnd().isAfter(LocalDateTime.now()) &&
-                requestDto.getStart().isBefore(requestDto.getEnd()))) {
+        if (!(requestDto.getStart().isBefore(requestDto.getEnd()))) {
             throw new IllegalArgumentException("Задан неправильный период бронирования");
         }
         return bookingClient.bookItem(userId, requestDto);
